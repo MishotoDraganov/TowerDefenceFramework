@@ -19,7 +19,7 @@ namespace AI_TowerDefense
     {
         public static bool DISPLAY_LOG_MESSAGES = true;
         public static int NORMAL_SPEED_MS = 500;
-        public static int FAST_SPEED_MS = 0;
+        public static int FAST_SPEED_MS = 5;
 
         private bool fastSpeedActivated = false;
 
@@ -47,17 +47,19 @@ namespace AI_TowerDefense
             _lane1 = new PlayerLane();
             _lane2 = new PlayerLane();
             
-            _playerA = new Player("A", _lane1, _lane2);
-            _playerB = new Player("B", _lane2, _lane1);
+            _playerA = new Player("O", _lane1, _lane2);
+            _playerB = new Player("H", _lane2, _lane1);
 
             // here you replace the selected strategy with your strategy class(es).
             // Your strategy should at least be able to beat random!
             
-            _playerAStrategy = new DragoStrategyTest(_playerA);
-            _playerBStrategy = new DragoStrategyTest(_playerB);
+            _playerAStrategy = new ZergDirectorStrategy(_playerA);
+            _playerBStrategy = new XenoStrategy(_playerB);
         }
 
         public static TowerDefense Instance => instance ??= new TowerDefense();
+
+        public int Turns { get => turns; }
 
         /*
          * prints the current game state.
@@ -164,13 +166,15 @@ namespace AI_TowerDefense
             return unsortedList;
         }
 
-        //had to add this
         public List<Tower> SortedTowerArray(PlayerLane lane, List<Tower> unsortedList)
+
         {
+
             if (_playerA.EnemyLane == lane)
             {
                 return _playerAStrategy.SortedTowerArray(unsortedList);
             }
+
             if (_playerB.EnemyLane == lane)
             {
                 return _playerBStrategy.SortedTowerArray(unsortedList);

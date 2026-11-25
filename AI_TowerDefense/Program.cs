@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace AI_TowerDefense
+﻿namespace AI_TowerDefense
 {
     class Program
     {
@@ -9,7 +7,6 @@ namespace AI_TowerDefense
          */
         static void Main(string[] args)
         {
-            Console.CursorVisible = false;
             TowerDefense towerDefense = TowerDefense.Instance;
             towerDefense.RunGame();
         }

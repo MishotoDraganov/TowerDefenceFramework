@@ -60,7 +60,7 @@ namespace AI_Strategy
                     if (player.EnemyLane.GetCellAt(x, y).Unit == null)
                     {
                         positioned = true;
-                        player.TryBuySoldier<DragoSoldier>(x);
+                        player.TryBuySoldier<MySoldier>(x);
                     }
                 }
             }
@@ -73,6 +73,18 @@ namespace AI_Strategy
          * The default implementation does not change the order. Do better!
          */
         public override List<Soldier> SortedSoldierArray(List<Soldier> unsortedList)
+        {
+            return unsortedList;
+        }
+
+        /*
+         * called by the game play environment. The order in which the array is returned here is
+         * the order in which towers will plan and perform their action.
+         *
+         * The default implementation does not change the order. Do better!
+         */
+        public override List<Tower> SortedTowerArray(List<Tower> unsortedList)
+
         {
             return unsortedList;
         }

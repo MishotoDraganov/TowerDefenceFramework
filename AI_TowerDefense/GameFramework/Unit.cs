@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 
 namespace GameFramework
 {
@@ -21,6 +22,8 @@ namespace GameFramework
         protected int speed = 0;
 
         protected Player player;
+        public Player Player { get => player; }
+
         protected string type = "";
         protected int cost = 0;
 
@@ -89,8 +92,9 @@ namespace GameFramework
             unit.posY = -1;
         }
 
-        protected virtual bool TryGetTarget(out Unit unit)
+        protected bool TryGetTarget(out Unit unit)
         {
+            List<Unit> targetsInRange = new List<Unit>();
             for (int x = posX - range; x <= posX + range; x++)
             {
                 for (int y = posY - range; y <= posY + range; y++)
@@ -104,13 +108,32 @@ namespace GameFramework
                     unit = cell.Unit;
                     if (unit != null && unit.player != player && unit.health > 0)
                     {
-                        return true;
+                        targetsInRange.Add(unit);
+                        //return true;
                     }
                 }
             }
 
+            if (targetsInRange.Count > 0)
+            {
+                targetsInRange = SortTargetsInRange(targetsInRange);
+                unit = targetsInRange[0];
+                return true;
+            }
+
             unit = null;
             return false;
+        }
+
+        /*
+         * The default implementation does not sort the targets. You can override this
+         * for Towers or Soldiers in your solution
+         * to provide your own sorting strategy for the targets in range.
+         * TryGetTarget calls this method to get the sorted list of targets and selects the first one.
+         */
+        protected virtual List<Unit> SortTargetsInRange(List<Unit> targets)
+        {             // by default, do not sort targets
+            return targets;
         }
 
         /*

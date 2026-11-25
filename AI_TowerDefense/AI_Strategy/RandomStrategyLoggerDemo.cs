@@ -9,13 +9,17 @@ namespace AI_Strategy
      */
     public class RandomStrategyLoggerDemo : AbstractStrategy
     {
+        private int messageCounter = 1;
         private static Random random = new Random();
 
         public RandomStrategyLoggerDemo(Player player) : base(player)
         {
         }
 
-
+        /*
+         * example strategy for deploying Towers based on random placement and budget.
+         * Your one should be better!
+         */
         public override void DeployTowers()
         {
             if (player.Gold > 8)
@@ -26,7 +30,7 @@ namespace AI_Strategy
                 {
                     count++;
                     int x = random.Next(PlayerLane.WIDTH);
-                    int y = PlayerLane.HEIGHT - 1;// random.Next(PlayerLane.HEIGHT - PlayerLane.HEIGHT_OF_SAFETY_ZONE) + PlayerLane.HEIGHT_OF_SAFETY_ZONE;
+                    int y = random.Next(PlayerLane.HEIGHT - PlayerLane.HEIGHT_OF_SAFETY_ZONE) + PlayerLane.HEIGHT_OF_SAFETY_ZONE;
                     if (player.HomeLane.GetCellAt(x, y).Unit == null)
                     {
                         positioned = true;
@@ -42,7 +46,7 @@ namespace AI_Strategy
          */
         public override void DeploySoldiers()
         {
-/*
+
           //DebugLoger.Log(Tower.GetNextTowerCosts(defendLane));
             DebugLogger.Log("#" + messageCounter + " Deployed Soldier!");
             messageCounter++;
@@ -55,7 +59,7 @@ namespace AI_Strategy
 
                 System.Threading.Thread.Sleep(50);
             }
-*/
+
             int round = 0;
             while (player.Gold > 5 && round < 5)
             {
@@ -70,7 +74,7 @@ namespace AI_Strategy
                     if (player.EnemyLane.GetCellAt(x, y).Unit == null)
                     {
                         positioned = true;
-                        player.TryBuySoldier<DragoSoldier>(x, out var soldier);
+                        player.TryBuySoldier<MySoldier>(x, out var soldier);
                     }
                 }
             }
@@ -86,7 +90,15 @@ namespace AI_Strategy
         {
             return unsortedList;
         }
+
+        /*
+         * called by the game play environment. The order in which the array is returned here is
+         * the order in which towers will plan and perform their action.
+         *
+         * The default implementation does not change the order. Do better!
+         */
         public override List<Tower> SortedTowerArray(List<Tower> unsortedList)
+
         {
             return unsortedList;
         }
