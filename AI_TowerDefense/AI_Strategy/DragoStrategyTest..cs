@@ -47,10 +47,11 @@ namespace AI_Strategy
     public class Genes
     {
         //Economic Decision Chromosome; 
-        public Vector3 EconomicProbalisticTriangle { get; private set; }
+        public Vector3 EconomicProbalisticTriangle { get; set; }
         public int MinGoldForBurst { get; private set; }
         public int MinGoldForSurplus { get; private set; } //to spawn towers if all soldiers are spawned
 
+        public bool Adaptable { get; private set; }
 
 
         //Soldier Place and Move Chromosome; adds weight to A* for now-> will change it to D* Lite;
@@ -64,10 +65,13 @@ namespace AI_Strategy
         public float TowerSafetyValue { get; private set; } //proximity to other towers, perhaps te formation
         public float TowerCoverageValue { get; private set; } //simple coverage for now
 
-        public Genes(Vector3 economicTriangle,int minGoldForBurst, int minGoldForSurplus, float towerAvoidingValue, float soldierSafetyValue, float quickestTurnValue, float towerSafetyValue, float towerCoverageValue)
+        public float TowerYValue { get; private set; }
+
+        public Genes(Vector3 economicTriangle,int minGoldForBurst, int minGoldForSurplus, bool adaptable, float towerAvoidingValue, float soldierSafetyValue, float quickestTurnValue, float towerSafetyValue, float towerCoverageValue, float towerYValue)
         {
             EconomicProbalisticTriangle = economicTriangle;
             EconomicProbalisticTriangle = EconomicProbalisticTriangle.normalized();
+            Adaptable = adaptable;
 
             MinGoldForBurst = minGoldForBurst;
             MinGoldForSurplus = minGoldForSurplus;
@@ -77,6 +81,8 @@ namespace AI_Strategy
             QuickestTurnValue = quickestTurnValue;
             TowerSafetyValue = towerSafetyValue;
             TowerCoverageValue = towerCoverageValue;
+
+            TowerYValue = towerYValue;
         }
     }
 
@@ -89,33 +95,45 @@ namespace AI_Strategy
         private Genes genes;
         public DragoStrategyTest(Player player) : base(player)
         {
+            //unused
+            genes = new Genes(
+        new Vector3(0.9f, 0.0f, 0.07f), 49, 100, false,
+        1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f);
+
+            /*
+            
             if (playerGeneDistribution == 0)
                 genes = new Genes(
-                    new Vector3(1.0f, 0f, 0f), 49, 100,
-                    1.0f, 1.0f, 1.0f, 1.0f, 1.0f);
+            new Vector3(0.9f, 0.0f, 0.03f), 14, 100, false,
+            1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 0.5f);
+
 
             if (playerGeneDistribution == 1)
                 genes = new Genes(
-                    new Vector3(0f, 0f, 1f), 49, 100,
-                    1.0f, 1.0f, 1.0f, 1.0f, 1.0f);
+            new Vector3(0.9f, 0.0f, 0.03f), 14, 100, false,
+            1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 0.5f);
 
-
+            */
             playerGeneDistribution++;
-
-           // DebugLogger.Log("probs: (" + genes.EconomicProbalisticTriangle.x + ", " + genes.EconomicProbalisticTriangle.y + ", " + genes.EconomicProbalisticTriangle.z + ")");
         }
         bool isBursting = false;
 
         private void DecideEconomicAction(int soldiersPlacedThisTurn)
         {
+
             float buyTowerCost = player.HomeLane.TowerCount() + 2; //reason against placing tower
             float buySoldierCost = 2;
-            float towerSoldierCostRatio = buyTowerCost / buySoldierCost;
+            float towerSoldierCostRatio = (buyTowerCost / buySoldierCost);
 
             //as towers become more expensive, soldiers become more viable
             float towerPercentage = genes.EconomicProbalisticTriangle.x / towerSoldierCostRatio;
             float soldierPercentage = genes.EconomicProbalisticTriangle.y * towerSoldierCostRatio;
-            float preserveMoneyPercentage = genes.EconomicProbalisticTriangle.z;
+            float preserveMoneyPercentage = genes.EconomicProbalisticTriangle.z * player.HomeLane.TowerCount()*3;
+
+            Vector3 finalVec = new Vector3(towerPercentage, soldierPercentage, preserveMoneyPercentage).normalized();
+            towerPercentage = finalVec.x;
+            soldierPercentage = finalVec.y;
+            preserveMoneyPercentage = finalVec.z;
 
             List<Vector2> validTowerPlacements = ReturnValidTowerPlacements();
 
@@ -126,83 +144,63 @@ namespace AI_Strategy
                 {
                     if (player.Gold < buyTowerCost) return;
 
-                    DebugLogger.Log("Summon Tower! " + chancePercent + " " + towerPercentage + " " + soldierPercentage + " " + preserveMoneyPercentage);
 
                     bool towerPlaced = TryPlaceTower();
                     if (!towerPlaced)
                         return;
 
-                    DecideEconomicAction(soldiersPlacedThisTurn);
+                   // DecideEconomicAction(soldiersPlacedThisTurn);
                 }
                 else if (chancePercent < towerPercentage + soldierPercentage)
                 {
                     if (player.Gold < buySoldierCost) return;
 
-                    DebugLogger.Log("Summon Soldier!");
                     PlaceSoldier(ref soldiersPlacedThisTurn);
-                    DecideEconomicAction(soldiersPlacedThisTurn);
+                   // DecideEconomicAction(soldiersPlacedThisTurn);
                 }
                 else
                 {
-                    DebugLogger.Log(" Preserve Money!");
+                    //DebugLogger.Log(" Preserve Money!");
                 }
             }
+            
             else//burst
             {
                 isBursting = true;
                 while (true)
                 {
-                    float chancePercent = (float)(random.Next(101)) / 100.0f;
-                    if (chancePercent < towerPercentage && validTowerPlacements.Count > 0)
+                    if (player.Gold < buySoldierCost)
                     {
-                        if (player.Gold < buyTowerCost)
-                        {
-                            isBursting = false;
-                            break;
-                        }
-
-                        DebugLogger.Log("Summon Tower! BURST!");
-                        bool towerPlaced = TryPlaceTower();
-                        if (!towerPlaced)
-                            break;
-
+                        isBursting = false;
+                        break;
                     }
-                    else//the preserve chance goes into place soldier chance
-                    {
-                        if (player.Gold < buySoldierCost)
-                        {
-                            isBursting = false;
-                            break;
-                        }
-                        
 
-                        if (soldiersPlacedThisTurn >= PlayerLane.WIDTH)
-                            break;
 
-                        DebugLogger.Log("Summon Soldier! BURST!");
-                        PlaceSoldier(ref soldiersPlacedThisTurn);
-                    }
+                    if (soldiersPlacedThisTurn >= PlayerLane.WIDTH)
+                        break;
+
+                    PlaceSoldier(ref soldiersPlacedThisTurn);
+
                 }
             }
 
-            
 
 
-            if(soldiersPlacedThisTurn >= PlayerLane.WIDTH && player.Gold > genes.MinGoldForSurplus + buyTowerCost)
+
+            if (soldiersPlacedThisTurn >= PlayerLane.WIDTH && player.Gold > genes.MinGoldForSurplus + buyTowerCost)
             {
                 int enoughToPlaceSoldiers = PlayerLane.WIDTH * 2;
-                while (player.Gold > enoughToPlaceSoldiers + buyTowerCost)
+                bool towerPlaced = true;
+                while (player.Gold > enoughToPlaceSoldiers + buyTowerCost && towerPlaced)
                 {
-                    DebugLogger.Log("Summon Tower! Surplus!");
-                    bool towerPlaced = TryPlaceTower();
-                    if(!towerPlaced)
+                    towerPlaced = TryPlaceTower();
+                    if (!towerPlaced)
                         break;
                 }
             }
-            
+
         }
 
-        //fatal bug need to resolve -> if the player has enough gold to place a tower, but no valid placements, it will enter an infinite loop. Need to add a check for valid placements before attempting to place a tower.
         private List<Vector2> ReturnValidTowerPlacements()
         {
             List<Vector2> validCords = new List<Vector2>();
@@ -215,8 +213,7 @@ namespace AI_Strategy
                     {
                         if (!player.CheckAdjacentCellsAny(player.HomeLane, x, y, cell => cell.Unit is Tower))
                         {
-                            validCords.Add(new Vector2(x, y));
-                            return validCords;
+                                validCords.Add(new Vector2(x, y));
                         }
                     }
                 }
@@ -226,16 +223,34 @@ namespace AI_Strategy
         }
         public bool TryPlaceTower()
         {
+            
             List<Vector2> validPlacements = ReturnValidTowerPlacements();
 
 
-            if (validPlacements.Count > 0)
+            if (validPlacements!=null && validPlacements.Count > 0)
             {
-                Vector2 placement = validPlacements[0];
-                player.TryBuyTower<Tower>(placement.x, placement.y);
-                return true;
+                for(int i =0; i<validPlacements.Count; i++)
+                {
+                    int desiredY = (int)(genes.TowerYValue * PlayerLane.HEIGHT);
+
+                        Vector2 placement = validPlacements[i];
+                        TowerPlacementResult result = player.TryBuyTower<Tower>(placement.x, placement.y);
+
+                        if (result == TowerPlacementResult.Success)
+                        {
+                            DebugLogger.Log("place success " + placement.x + ", " + placement.y);
+                            return true;
+                        }
+                        else
+                        {
+                            DebugLogger.Log("place failed " + placement.x + ", " + placement.y);
+                            return false;
+                        }
+                    
+                }
             }
 
+            DebugLogger.Log("place FALSE ");
             return false;
         }
         public void PlaceSoldier(ref int soldiersPlacedThisTurn)
@@ -281,58 +296,9 @@ namespace AI_Strategy
 
 
 
-
-
-
-
-
-        /*
-         * called by the game play environment. The order in which the array is returned here is
-         * the order in which soldiers will plan and perform their movement.
-         *
-         * The default implementation does not change the order. Do better!
-         */
         public override List<Soldier> SortedSoldierArray(List<Soldier> unsortedList)
         {
             return unsortedList;
         }
     }
 }
-
-
-/*
- 
- 
-  public class Vector2
-    {
-        public float x;
-        public float y;
-
-        public Vector2(float x, float y)
-        {
-            this.x = x;
-            this.y = y;
-        }
-        public float Magnitude()
-        {
-            return (float)Math.Sqrt(x * x + y * y);
-        }
-        public Vector3 GetProbabilities()
-        {
-            float mag = Magnitude();
-
-            float R = 1.0f;//max dist of a vector inside the triangle from center
-            float third = 1.0f / 3.0f;
-
-            float p1 = third + (2 * y) / (3 * R);
-            float p2 = third - ((y) / (3 * R)) - (x / ((float)Math.Sqrt(3.0f) * R));
-            float p3 = third - ((y) / (3 * R)) + (x / ((float)Math.Sqrt(3.0f) * R));
-
-            DebugLogger.Log(p1 + " " + p2 + " " + p3);
-
-            return new Vector3(p1, p2, p3);
-        }
-    }
-
-
- */
