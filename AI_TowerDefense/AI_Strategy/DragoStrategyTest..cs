@@ -64,7 +64,6 @@ namespace AI_Strategy
         //Tower Placing Chromosome; Places tower on Node with highest value;
         public float TowerSafetyValue { get; private set; } //proximity to other towers, perhaps te formation
         public float TowerCoverageValue { get; private set; } //simple coverage for now
-
         public float TowerYValue { get; private set; }
 
         public Genes(Vector3 economicTriangle,int minGoldForBurst, int minGoldForSurplus, bool adaptable, float towerAvoidingValue, float soldierSafetyValue, float quickestTurnValue, float towerSafetyValue, float towerCoverageValue, float towerYValue)
@@ -95,25 +94,26 @@ namespace AI_Strategy
         private Genes genes;
         public DragoStrategyTest(Player player) : base(player)
         {
+
             //unused
             genes = new Genes(
         new Vector3(0.9f, 0.0f, 0.07f), 49, 100, false,
-        1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f);
+        1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 0.5f);
 
-            /*
+            
             
             if (playerGeneDistribution == 0)
                 genes = new Genes(
             new Vector3(0.9f, 0.0f, 0.03f), 14, 100, false,
-            1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 0.5f);
+            1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 0.2f);
 
 
             if (playerGeneDistribution == 1)
                 genes = new Genes(
             new Vector3(0.9f, 0.0f, 0.03f), 14, 100, false,
-            1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 0.5f);
+            1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 0.8f);
 
-            */
+            
             playerGeneDistribution++;
         }
         bool isBursting = false;
@@ -229,28 +229,23 @@ namespace AI_Strategy
 
             if (validPlacements!=null && validPlacements.Count > 0)
             {
+                Vector2 bestPlacementIntegerScorePair = new Vector2(0, 0); //x=0; y=score
                 for(int i =0; i<validPlacements.Count; i++)
                 {
-                    int desiredY = (int)(genes.TowerYValue * PlayerLane.HEIGHT);
-
-                        Vector2 placement = validPlacements[i];
-                        TowerPlacementResult result = player.TryBuyTower<Tower>(placement.x, placement.y);
-
-                        if (result == TowerPlacementResult.Success)
-                        {
-                            DebugLogger.Log("place success " + placement.x + ", " + placement.y);
-                            return true;
-                        }
-                        else
-                        {
-                            DebugLogger.Log("place failed " + placement.x + ", " + placement.y);
-                            return false;
-                        }
                     
+                }
+
+
+                Vector2 placement = validPlacements[bestPlacementIntegerScorePair.x];
+                TowerPlacementResult result = player.TryBuyTower<Tower>(placement.x, placement.y);
+
+                if (result == TowerPlacementResult.Success)
+                {
+                    DebugLogger.Log("place success " + placement.x + ", " + placement.y);
+                    return true;
                 }
             }
 
-            DebugLogger.Log("place FALSE ");
             return false;
         }
         public void PlaceSoldier(ref int soldiersPlacedThisTurn)
@@ -297,6 +292,10 @@ namespace AI_Strategy
 
 
         public override List<Soldier> SortedSoldierArray(List<Soldier> unsortedList)
+        {
+            return unsortedList;
+        }
+        public override List<Tower> SortedTowerArray(List<Tower> unsortedList)
         {
             return unsortedList;
         }

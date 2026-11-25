@@ -32,5 +32,9 @@ namespace AI_Strategy
          * the order in which soldiers will plan and perform their movement.
          */
         public abstract List<Soldier> SortedSoldierArray(List<Soldier> unsortedList);
+
+
+        public abstract List<Tower> SortedTowerArray(List<Tower> unsortedList);
+
     }
 }

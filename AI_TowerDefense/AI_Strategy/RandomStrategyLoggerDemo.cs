@@ -86,5 +86,9 @@ namespace AI_Strategy
         {
             return unsortedList;
         }
+        public override List<Tower> SortedTowerArray(List<Tower> unsortedList)
+        {
+            return unsortedList;
+        }
     }
 }

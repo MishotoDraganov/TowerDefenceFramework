@@ -163,5 +163,19 @@ namespace AI_TowerDefense
             }
             return unsortedList;
         }
+
+        //had to add this
+        public List<Tower> SortedTowerArray(PlayerLane lane, List<Tower> unsortedList)
+        {
+            if (_playerA.EnemyLane == lane)
+            {
+                return _playerAStrategy.SortedTowerArray(unsortedList);
+            }
+            if (_playerB.EnemyLane == lane)
+            {
+                return _playerBStrategy.SortedTowerArray(unsortedList);
+            }
+            return unsortedList;
+        }
     }
 }
