@@ -18,8 +18,8 @@ namespace AI_TowerDefense
     public class TowerDefense
     {
         public static bool DISPLAY_LOG_MESSAGES = true;
-        public static int NORMAL_SPEED_MS = 500;
-        public static int FAST_SPEED_MS = 5;
+        public static int NORMAL_SPEED_MS = 0;
+        public static int FAST_SPEED_MS = 0;
 
         private bool fastSpeedActivated = false;
 
@@ -53,8 +53,8 @@ namespace AI_TowerDefense
             // here you replace the selected strategy with your strategy class(es).
             // Your strategy should at least be able to beat random!
             
-            _playerAStrategy = new ZergDirectorStrategy(_playerA);
-            _playerBStrategy = new XenoStrategy(_playerB);
+            _playerAStrategy = new DragoStrategyTest(_playerA);
+            _playerBStrategy = new DragoStrategyTest(_playerB);
         }
 
         public static TowerDefense Instance => instance ??= new TowerDefense();
@@ -130,7 +130,7 @@ namespace AI_TowerDefense
                 _playerBStrategy.DeploySoldiers();
 
                 PrintLanes();
-                Thread.Sleep(this.fastSpeedActivated ? FAST_SPEED_MS : NORMAL_SPEED_MS);
+                //Thread.Sleep(this.fastSpeedActivated ? FAST_SPEED_MS : NORMAL_SPEED_MS);
 
                 _lane1.SoldierAction();
                 _lane2.SoldierAction();
@@ -143,7 +143,7 @@ namespace AI_TowerDefense
                 PrintLanes();
 
                 DebugLogger.RenderCache();
-                Thread.Sleep(this.fastSpeedActivated ? FAST_SPEED_MS : NORMAL_SPEED_MS);
+                //Thread.Sleep(this.fastSpeedActivated ? FAST_SPEED_MS : NORMAL_SPEED_MS);
             }
 
             Console.ReadKey();
